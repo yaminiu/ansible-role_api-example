@@ -1,0 +1,131 @@
+---
+
+# /etc/hosts  bug here append to hosts
+- name: update /etc/hosts
+  ansible.builtin.template:
+    src: templates/host.entries.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: add stserver nodes to hosts file
+  lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_default_ipv4.address }} {{item}}" state=present
+  when: hostvars[item].ansible_default_ipv4.address is defined
+  with_items: "{{groups['mft_ST_SERVER']}}"
+
+
+- name: Run the stop_all scripts 
+  become: true
+  become_user: "{{ st_user }}"  
+  command: "/opt/axway/SecureTransport/bin/stop_all"
+
+- name: Get running axway processes 
+  become: true
+  shell: "ps -fu {{ st_user }} | awk  'NR>2{  print $2 }'"
+  register: running_processes
+
+- name: Kill running axway processes
+  become: true
+  become_user: "{{ st_user }}"  
+  shell: "kill -9 {{ item }}"
+  with_items: "{{ running_processes.stdout_lines }}"
+  ignore_errors: yes
+  
+- name: Waiting until all running processes are killed
+  wait_for:
+    path: "/proc/{{ item }}/status"
+    state: absent
+  with_items: "{{ running_processes.stdout_lines }}"
+
+- name: Run the start_admin scripts on first node
+  become: true
+  become_user: "{{ st_user }}"  
+  ansible.builtin.shell: |
+      set timeout 300
+      /opt/axway/SecureTransport/bin/start_admin 
+  run_once: true
+  # ignore_errors: yes
+  register: admin_state
+
+- name: Print admin_state
+  debug:
+    var: admin_state
+
+- name: wait 120s for admin service start on first node
+  command: sleep 120
+  run_once: true
+
+- name: Check if admin port 8444 is listening
+  wait_for:
+    port: 8444
+    delay: 60
+    timeout: 120
+    msg: "Timeout waiting for 444 to respond"
+  run_once: true
+  register: port_check
+
+
+# Add nodes to cluster 
+
+- name: Add nodes to cluster
+  uri:
+    url: "https://localhost:8444/api/v2.0/configurations/clusterManagement"
+    method: POST
+    body_format: json
+    body: "{ \"serverAddress\": \"{{ item }}\"  }"
+    # body: "{{ cluster_json_file_content['content'] | b64decode }}"
+    headers:
+      Content-Type: "application/json"
+    url_username: "{{ st_admin_username }}"
+    url_password: "{{ st_admin_password }}"
+    status_code: "201,400,409"  # 201 succeed, 400 exist
+    force_basic_auth: yes
+    validate_certs: no
+  # register: add_cluster_response
+  run_once: true
+  ignore_errors: True 
+  with_items: "{{ st_server_ips }}"
+
+- name: Run the start_all scripts 
+  become: true
+  become_user: "{{ st_user }}"  
+  ansible.builtin.shell: |
+      set timeout 300
+      /opt/axway/SecureTransport/bin/start_all
+  throttle: 1
+  ignore_errors: True      
+  until: start_all_stat.rc == 0
+  retries: 3
+  delay: 60
+  register: start_all_stat
+
+- name: Print start_all_stat
+  debug:
+    var: start_all_stat
+
+# Get current cluster
+- name: Check Cluster
+  become: true
+  become_user: "{{ st_user }}"    
+  ansible.builtin.uri:
+    url: "https://localhost:8444/api/v2.0/configurations/clusterManagement"
+    method: GET
+    headers:
+      Content-Type: "application/json"
+    url_username: "{{ st_admin_username }}"
+    url_password: "{{ st_admin_password }}"
+    status_code: "200"
+    force_basic_auth: yes
+    validate_certs: no    
+  register: _result
+  ignore_errors: True      
+  until: _result.status == 200
+  retries: 3
+  delay: 60
+  run_once: true
+
+- name: Print _result
+  debug:
+    var:  _result.status
+  run_once: true

@@ -1,0 +1,19 @@
+---
+
+- name: Get IP addresses of mft_ST_SERVER hosts
+  set_fact:
+    st_server_ips: [ "{{ groups['mft_ST_SERVER'] |map('extract', hostvars, 'ansible_host' ) | list }}"]  #"{{ groups['mft_ST_SERVER'] |map('extract', hostvars, 'ansible_host' ) | list }}"
+  run_once: true  
+  
+- name: print IP addresses of mft_ST_SERVER hosts
+  ansible.builtin.debug:
+    var: st_server_ips 
+
+- name: Get IP addresses of mft_Edge_SERVER hosts
+  set_fact:
+    edge_server_ips: "{{ groups['mft_EDGE_SERVER'] |map('extract', hostvars, 'ansible_host' ) | list }}" #"{{ groups['mft_ST_SERVER'] |map('extract', hostvars, 'ansible_host' ) | list }}"
+  run_once: true 
+
+- name: print IP addresses of mft_ST_SERVER hosts
+  ansible.builtin.debug:
+    var: edge_server_ips 

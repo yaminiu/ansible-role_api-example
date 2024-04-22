@@ -1,0 +1,71 @@
+---
+# vars file for mft-st-api
+
+## server configuration
+service_name: stserver
+st_user: axway
+# st_admin_password: admin
+# st_admin_username: admin 
+
+
+## Ansible Host connectivity
+ansible_user: ec2-user
+ansible_ssh_common_args: "-o StricthostKeyChecking=no"
+
+## provide in DNS Domain depends on evnoirnment
+
+#RDS domains 
+rds_domains:
+  uat: 'cabb7vk2xk8i.ap-southeast-2.rds.amazonaws.com'
+  dev: 'co2md0gjnf3k.ap-southeast-2.rds.amazonaws.com'
+  prd: 'cfhzxykidasf.ap-southeast-2.rds.amazonaws.com'
+
+rds_domain:  "{{ rds_domains[env_name | default('dev')] | default('co2md0gjnf3k.ap-southeast-2.rds.amazonaws.com') }}"
+
+# CA password for generate certificate 
+internal_ca_password: "{{ lookup('aws_ssm', '/mft/st/ca-password', decrypt=true, region='ap-southeast-2') | trim }}"
+
+# hibernate-cache-config.xml tunning
+hibernate_cache: toset
+
+esiadmin_password:  "{{ lookup('aws_ssm', '/mft/st/admin_pwd', decrypt=true, region='ap-southeast-2') | trim }}"
+
+api_conf:
+  - { name: "esiadmin", j2_file: "esiadmin"}
+  - { name: "DMZ", j2_file: "create-network-zone"}
+  - { name: "ssh", j2_file: "update-ssh-service" }
+  - { name: "DMZ_AZ_C", j2_file: "create-network-zone-dmc-az-c" }
+  - { name: "File_Archiving", j2_file: "file_archiving" }
+  - { name: "sftpd_cert", j2_file: "sftpd-cert" }
+
+## following need provide based on environment 
+
+# configuration_options:
+#   - {name: "Users.Session.clientCertSsh", value: "optional"}
+#   - {name: "Stfs.Files.Permissions", value: "rwxr-xr-x"}
+#   - {name: "Ftp.Inbound.Listeners.Listener.enable", value: "false"}
+#   - {name: "Http.Security.Hsts.enabled", value: "true"}
+#   - {name: "Http.Ssl.Certificate", value: "httpd"}
+#   - {name: "AdminLockoutLimit", value: "5"}
+#   - {name: "AdminPasswordExpiration", value: "175"}
+#   - {name: "Admin.Ssl.protocols", value: "TLSv1.2, TLSv1.3"}
+#   - {name: "Admin.EnabledCipherSuites", value: "TLS_AES_256_GCM_SHA384, TLS_AES_128_GCM_SHA256, TLS_CHACHA20_POLY1305_SHA256, TLS_AES_128_CCM_SHA256, TLS_AES_128_CCM_8_SHA256, TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384, TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256, TLS_DHE_RSA_WITH_AES_256_GCM_SHA384, TLS_DHE_DSS_WITH_AES_256_GCM_SHA384, TLS_DHE_DSS_WITH_AES_256_CBC_SHA256, TLS_DHE_RSA_WITH_AES_256_CBC_SHA256, TLS_DHE_RSA_WITH_AES_128_GCM_SHA256, TLS_DHE_DSS_WITH_AES_128_GCM_SHA256, TLS_DHE_DSS_WITH_AES_128_CBC_SHA256, TLS_DHE_RSA_WITH_AES_128_CBC_SHA256, TLS_RSA_WITH_AES_256_CBC_SHA256, TLS_EMPTY_RENEGOTIATION_INFO_SCSV"}
+#   - {name: "EventQueue.ThreadPools.AdvancedRouting.maxThreads", value: "1024"}
+#   - {name: "EventQueue.ThreadPools.AdvancedRouting.minThreads", value: "512"}
+#   - {name: "EventQueue.SizeLimit.maxQueueSize", value: "10240"}
+#   - {name: "EventQueue.ThreadPools.ThreadPool.maxThreads", value: "1024"}
+#   - {name: "EventQueue.ThreadPools.ThreadPool.minThreads", value: "512"}
+#   - {name: "FileArchiving.ArchiveFolder", value: "/mfthub/Archives/FileTransfers"}
+#   - {name: "FileArchiving.DeleteFiles.MeasureUnit", value: "days"}
+#   - {name: "OutboundConnections.maxConnectionsPerHost", value: "1500"}
+#   - {name: "PasswdPolicy", value: "8:1:1:1:12"}
+#   - {name: "Ftp.Ssl.Certificate", value: "ftpd"}
+#   - {name: "Http.Security.Hsts.enabled", value: "false"}
+#   - {name: "LoginSettings.Certificate", value: "enabled"}
+#   - {name: "Streaming.TrustedAliases", value: "ca,ca-mftproxy"}
+#   # Prod and nonprod different
+#   - {name: "Server.Smtp.Host", value: "email-smtp.ap-southeast-2.amazonaws.com"}
+#   - {name: "Server.Startup.PemFailureEmail", value: "ICC_Operations@amp.com.au"}
+#   - {name: "Server.Smtp.Login", value: "AKIAT5OZ5SRZMJI6FVN4"}
+
+# dns_zone_name

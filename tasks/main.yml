@@ -1,0 +1,38 @@
+---
+# tasks file for mft-st-api
+- name: collect server IPs
+  import_tasks: tasks/collect_ips.yml
+
+- name: Create Json files for api
+  import_tasks: tasks/generate_json.yml
+  run_once: true
+
+- name: cluster setup
+  import_tasks: tasks/cluster.yml
+
+- name: configure DMZ Zones
+  import_tasks: tasks/dmz.yml
+  run_once: true
+  # ignore_errors: True      
+
+- name: configure ssh
+  import_tasks: tasks/ssh_service.yml
+  run_once: true
+  ignore_errors: True
+
+- name: cluster setup
+  import_tasks: tasks/create_esiadmin.yml
+  ignore_errors: True 
+  run_once: true
+
+- name: configuration apply
+  import_tasks: tasks/configuration_options.yml
+  run_once: true
+  ignore_errors: True 
+  
+- name: configure filearchining
+  import_tasks: tasks/file_archiving.yml
+  run_once: true
+  ignore_errors: True 
+
+

@@ -1,0 +1,10 @@
+---
+
+- name: template the json request with any environment related values
+  template:
+    src: "templates/api-requests/{{ item.j2_file }}.json.j2"
+    dest: "/tmp/{{ item.j2_file }}.json"
+    owner: "{{ st_user }}"
+    group: "{{ st_user }}"
+  loop:
+    "{{ api_conf }}"

@@ -1,0 +1,36 @@
+{
+    "name": "DMZ_AZ_C",
+    "description": "This was created for Statpro",
+    "publicURLPrefix": null,
+    "ssoSpEntityId": null,
+    "isDnsResolutionEnabled": true,
+    "isDefault": false,
+    "edges": [
+      {
+        "title": "PROXY_AZ_C",
+        "notes": null,
+        "deploymentSite": "Prod",
+        "enabledProxy": true,
+        "configurationId": null,
+        "descriptor": null,
+        "protocols": [],
+        "proxies": [
+          {
+            "proxyProtocol": "SOCKS_PROXY",
+            "port": 1080,
+            "isEnabled": true,
+            "username": null,
+            "password": null,
+            "isUsePassword": false
+          }
+        ],
+        "isAutoDiscoverable": false,
+        "dynamicNodeIpDiscoveryFqdn": null,
+        "ipAddresses": [
+          {
+            "ipAddress": "ampmftprxyuc.{{ dns_zone_name }}"
+          }
+        ]
+      }
+    ]
+  }

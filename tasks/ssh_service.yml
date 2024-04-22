@@ -1,0 +1,63 @@
+---
+# create sftpd certoificate 
+
+- name: read the sftpd cert templated json request
+  slurp:
+    src: "/tmp/sftpd-cert.json"
+  register: sftpd_json_file_content
+
+- name: Print sftpd_json_file_content
+  debug:
+    var: sftpd_json_file_content['content'] | b64decode
+
+- name: generate sftpd certificate
+  uri:
+    url: "https://localhost:8444/api/v2.0/certificates"
+    method: POST
+    body_format: json
+    body: "{{ sftpd_json_file_content['content'] | b64decode }}"
+    headers:
+      Content-Type: "application/json"
+    url_username: "{{ st_admin_username }}"
+    url_password: "{{ st_admin_password }}"
+    status_code: "201,204"
+    force_basic_auth: yes
+    validate_certs: no
+  run_once: true
+  register: sftpf_cert_response
+  ignore_errors: true
+
+- name: Print sftpf_cert_response
+  debug:
+    var: sftpf_cert_response.status
+
+
+# ssh server
+- name: read the ssh templated json request
+  slurp:
+    src: "/tmp/update-ssh-service.json"
+  register: ssh_json_file_content
+
+- name: Print ssh json request to be sent
+  debug:
+    var: ssh_json_file_content['content'] | b64decode
+
+- name: update ssh service
+  uri:
+    url: "https://localhost:8444/api/v2.0/servers/ssh"
+    method: PUT
+    body_format: json
+    body: "{{ ssh_json_file_content['content'] | b64decode }}"
+    headers:
+      Content-Type: "application/json"
+    url_username: "{{ st_admin_username }}"
+    url_password: "{{ st_admin_password }}"
+    status_code: "201,204"
+    force_basic_auth: yes
+    validate_certs: no
+  run_once: true
+  register: api_ssh_response
+
+- name: Print response from API
+  debug:
+    var: api_ssh_response.status

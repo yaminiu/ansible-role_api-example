@@ -1,0 +1,30 @@
+---
+# ssh server
+- name: read the file archiving json request
+  slurp:
+    src: "/tmp/file_archiving.json"
+  register: filearchiving_json_file_content
+
+- name: Print filearching json request to be sent
+  debug:
+    var: filearchiving_json_file_content['content'] | b64decode
+
+- name: update file achiving 
+  uri:
+    url: "https://localhost:8444/api/v2.0/configurations/fileArchiving"
+    method: PUT
+    body_format: json
+    body: "{{ filearchiving_json_file_content['content'] | b64decode }}"
+    headers:
+      Content-Type: "application/json"
+    url_username: "{{ st_admin_username }}"
+    url_password: "{{ st_admin_password }}"
+    status_code: "201,204"
+    force_basic_auth: yes
+    validate_certs: no
+  run_once: true
+  register: api_ssh_response
+
+- name: Print response from API
+  debug:
+    var: api_ssh_response.status

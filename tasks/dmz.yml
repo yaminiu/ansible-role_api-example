@@ -1,0 +1,140 @@
+---
+
+# DMC Zone 
+- name: Check if zone DMZ exist
+  ansible.builtin.uri:
+    url: "https://localhost:8444/api/v2.0/zones/DMZ"
+    method: HEAD
+    headers:
+      Content-Type: "application/json"
+    url_username: "{{ st_admin_username }}"
+    url_password: "{{ st_admin_password }}"
+    status_code: "200,404" # 200 Success 404 Not found 
+    force_basic_auth: yes
+    validate_certs: no
+  register: check_dmz_response
+  until: check_dmz_response.status == 200 or check_dmz_response.status == 404
+  retries: 3
+  delay: 60
+
+- name: Print check dmz response
+  debug:
+    var: check_dmz_response.status
+
+- name: read the dmz json file
+  slurp:
+    src: "/tmp/create-network-zone.json"
+  register: dmz_json_file_content
+
+- name: Print dmz json file
+  debug:
+    var: dmz_json_file_content['content'] | b64decode
+
+# create when DMZ doesn't exist
+- name: Create Zone DMZ with POST
+  ansible.builtin.uri:
+    url: "https://localhost:8444/api/v2.0/zones"
+    method: POST
+    body_format: json
+    body: "{{ dmz_json_file_content['content'] | b64decode }}"
+    headers:
+      Content-Type: "application/json"
+    url_username: "{{ st_admin_username }}"
+    url_password: "{{ st_admin_password }}"
+    status_code: "200,201,204"
+    force_basic_auth: yes
+    validate_certs: no
+  run_once: true
+  register: api_zones_response
+  when: check_dmz_response.status == 404
+
+# update when DMZ exist
+- name: Send PUT request to the MFT API
+  ansible.builtin.uri:
+    url: "https://localhost:8444/api/v2.0/zones/DMZ"
+    method: PUT
+    body_format: json
+    body: "{{ dmz_json_file_content['content'] | b64decode }}"
+    headers:
+      Content-Type: "application/json"
+    url_username: "{{ st_admin_username }}"
+    url_password: "{{ st_admin_password }}"
+    status_code: "201,204"
+    force_basic_auth: yes
+    validate_certs: no
+  run_once: true
+  register: api_zones_response
+  when: check_dmz_response.status != 404
+
+- name: Print response from API
+  debug:
+    var: api_zones_response.status
+
+# DMZ_AZ_C Zone  
+
+- name: Check if zone DMZ_AZ_C exist
+  ansible.builtin.uri:
+    url: "https://localhost:8444/api/v2.0/zones/DMZ_AZ_C"
+    method: HEAD
+    headers:
+      Content-Type: "application/json"
+    url_username: "{{ st_admin_username }}"
+    url_password: "{{ st_admin_password }}"
+    status_code: "200,404" # 200 Success 404 Not found 
+    force_basic_auth: yes
+    validate_certs: no
+  run_once: true
+  register: check_dmz_az_c_response
+
+- name: Print check check_dmz_az_c_response
+  debug:
+    var: check_dmz_az_c_response.status
+
+- name: read the dmz c json file
+  slurp:
+    src: "/tmp/create-network-zone-dmc-az-c.json"
+  register: dmz_az_c_json_file_content
+
+- name: Print dmz json file
+  debug:
+    var: dmz_az_c_json_file_content['content'] | b64decode
+
+# create when DMZ_AZ_C doesn't exist
+- name: Create Zone DMZ C with POST
+  ansible.builtin.uri:
+    url: "https://localhost:8444/api/v2.0/zones"
+    method: POST
+    body_format: json
+    body: "{{ dmz_az_c_json_file_content['content'] | b64decode }}"
+    headers:
+      Content-Type: "application/json"
+    url_username: "{{ st_admin_username }}"
+    url_password: "{{ st_admin_password }}"
+    status_code: "200,201,204"
+    force_basic_auth: yes
+    validate_certs: no
+  run_once: true
+  register: api_zones_response
+  when: check_dmz_az_c_response.status == 404
+
+# update when DMZ_AZ_C exist
+- name: Update DMZ_AZ_C
+  ansible.builtin.uri:
+    url: "https://localhost:8444/api/v2.0/zones/DMZ_AZ_C"
+    method: PUT
+    body_format: json
+    body: "{{ dmz_az_c_json_file_content['content'] | b64decode }}"
+    headers:
+      Content-Type: "application/json"
+    url_username: "{{ st_admin_username }}"
+    url_password: "{{ st_admin_password }}"
+    status_code: "201,204"
+    force_basic_auth: yes
+    validate_certs: no
+  run_once: true
+  register: api_zones_response
+  when: check_dmz_az_c_response.status != 404
+
+- name: Print response from API
+  debug:
+    var: check_dmz_az_c_response.status

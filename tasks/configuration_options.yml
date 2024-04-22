@@ -1,0 +1,18 @@
+# Apply Configuration Options
+
+- name: Apply Configuration Options
+  uri:
+    url: "https://localhost:8444/api/v2.0/configurations/options/{{ item.name }}"
+    method: PATCH
+    body_format: json
+    body: "[{ \"op\": \"replace\", \"path\": \"/values\", \"value\": [\" {{ item.value }}\"]} ]"
+    headers:
+      Content-Type: "application/json"
+    url_username: "{{ st_admin_username }}"
+    url_password: "{{ st_admin_password }}"
+    status_code: "201,204"
+    force_basic_auth: yes
+    validate_certs: no
+  run_once: true
+  loop:
+    "{{ configuration_options }}"
