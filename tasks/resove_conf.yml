@@ -1,0 +1,17 @@
+---
+- name: Manage resolv.conf
+  hosts: your_hosts
+  vars:
+    nameservers:
+      - 8.8.8.8
+      - 8.8.4.4
+    search_domains:
+      - example.com
+      - subdomain.example.com
+    domain: example.com
+  tasks:
+    - name: Copy resolv.conf template
+      template:
+        src: templates/resolv.conf.j2
+        dest: /etc/resolv.conf
+      become: yes
