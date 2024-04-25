@@ -1,0 +1,12 @@
+# resolv.conf.j2
+{% for nameserver in nameservers %}
+nameserver {{ nameserver }}
+{% endfor %}
+
+{% if search_domains %}
+search {% for domain in search_domains %}{{ domain }} {% endfor %}
+{% endif %}
+
+{% if domain %}
+domain {{ domain }}
+{% endif %}
