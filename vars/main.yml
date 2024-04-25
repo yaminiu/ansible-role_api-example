@@ -68,4 +68,12 @@ api_conf:
 #   - {name: "Server.Startup.PemFailureEmail", value: "ICC_Operations@amp.com.au"}
 #   - {name: "Server.Smtp.Login", value: "AKIAT5OZ5SRZMJI6FVN4"}
 
-# dns_zone_name
+# resovl.conf
+
+nameservers:
+  - 8.8.8.8
+  - 8.8.4.4
+search_domains:
+  - example.com
+  - subdomain.example.com
+domain: example.com
